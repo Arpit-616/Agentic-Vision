@@ -1,0 +1,17 @@
+# Keep only top-level app dependencies here so pip can resolve
+# Python-version-compatible transitive packages on its own.
+streamlit==1.47.1
+python-dotenv==1.1.1
+langchain==0.3.27
+langchain-community==0.3.27
+langchain-openai==0.3.28
+langchain-ollama==0.3.5
+langchain-text-splitters==0.3.9
+langgraph>=1.0,<2
+langgraph-prebuilt>=1.0,<2
+langgraph-checkpoint-sqlite==2.0.11
+ormsgpack>=1.12.2
+faiss-cpu
+pypdf
+duckduckgo-search
+requests==2.32.4
