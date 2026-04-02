@@ -11,7 +11,6 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
@@ -19,20 +18,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 import requests
 
 load_dotenv(override=True)
-
-
-def _get_openai_api_key() -> str:
-    """Return a normalized OpenAI key or raise a helpful error."""
-    key = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
-    if not key:
-        raise ValueError(
-            "OPENAI_API_KEY is missing. Add a valid key to your .env file."
-        )
-    if "*" in key or "your_openai_api_key" in key.lower():
-        raise ValueError(
-            "OPENAI_API_KEY looks masked or placeholder text. Paste the full, real key."
-        )
-    return key
 
 
 def _get_ollama_installed_models(base_url: str) -> list[str]:
@@ -50,31 +35,33 @@ def _get_ollama_installed_models(base_url: str) -> list[str]:
 # -------------------
 # 1. LLM + embeddings
 # -------------------
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").strip().lower()
+ollama_base_url = (
+    os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip().strip('"').strip("'")
+)
+ollama_model = (
+    os.getenv("OLLAMA_MODEL", "llama3.1:8b").strip().strip('"').strip("'")
+)
+ollama_embed_model = (
+    os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+    .strip()
+    .strip('"')
+    .strip("'")
+)
+installed_models = _get_ollama_installed_models(ollama_base_url)
 
-if LLM_PROVIDER == "ollama":
-    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
-    ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b").strip()
-    ollama_embed_model = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text").strip()
-    installed_models = _get_ollama_installed_models(ollama_base_url)
+if installed_models:
+    if ollama_model not in installed_models:
+        ollama_model = installed_models[0]
+    if ollama_embed_model not in installed_models:
+        # Fall back to the active chat model to avoid immediate 404 errors.
+        ollama_embed_model = ollama_model
 
-    if installed_models:
-        if ollama_model not in installed_models:
-            ollama_model = installed_models[0]
-        if ollama_embed_model not in installed_models:
-            # Fall back to the active chat model to avoid immediate 404 errors.
-            ollama_embed_model = ollama_model
-
-    llm = ChatOllama(
-        model=ollama_model,
-        base_url=ollama_base_url,
-        temperature=0.2,
-    )
-    embeddings = OllamaEmbeddings(model=ollama_embed_model, base_url=ollama_base_url)
-else:
-    OPENAI_API_KEY = _get_openai_api_key()
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.2, api_key=OPENAI_API_KEY)
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
+llm = ChatOllama(
+    model=ollama_model,
+    base_url=ollama_base_url,
+    temperature=0.2,
+)
+embeddings = OllamaEmbeddings(model=ollama_embed_model, base_url=ollama_base_url)
 
 # -------------------
 # 2. PDF retriever store (per thread)

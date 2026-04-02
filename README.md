@@ -18,7 +18,7 @@ The app uses LangGraph for tool routing, LangChain integrations for models and r
 - Use a built-in calculator tool for simple arithmetic
 - Search the web with DuckDuckGo
 - Fetch stock quotes with Alpha Vantage
-- Run with either OpenAI or Ollama
+- Run with Ollama
 
 ## How It Works
 
@@ -52,7 +52,6 @@ The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
 
 - Python 3.10+
 - `pip`
-- An OpenAI API key if using OpenAI
 - Ollama installed locally if using Ollama
 
 ## Installation
@@ -74,17 +73,7 @@ pip install -r requirements.txt
 
 Create or update `.env` in the project root.
 
-### OpenAI mode
-
 ```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=your_real_openai_api_key
-```
-
-### Ollama mode
-
-```env
-LLM_PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.1:8b
 OLLAMA_EMBED_MODEL=nomic-embed-text
@@ -149,14 +138,6 @@ The app includes a stock lookup tool backed by Alpha Vantage.
 
 ## Troubleshooting
 
-### OpenAI authentication error
-
-If you see an API key error:
-
-- Make sure `OPENAI_API_KEY` is set in `.env`
-- Use a real key, not placeholder or masked text
-- Restart Streamlit after updating the file
-
 ### Ollama model not found
 
 If the configured Ollama model is missing, pull it locally:
@@ -181,7 +162,7 @@ If the assistant says no document is available:
 - LangChain
 - LangGraph
 - FAISS
-- OpenAI or Ollama
+- Ollama
 - PyPDF
 - DuckDuckGo Search
 - Requests
@@ -192,4 +173,3 @@ If the assistant says no document is available:
 - Persist vector indexes per thread
 - Replace the hardcoded stock API key with environment-based configuration
 - Add tests and better error handling
-

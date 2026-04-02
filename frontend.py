@@ -202,17 +202,16 @@ if user_input:
         except Exception as exc:
             stream_failed = True
             error_text = str(exc)
-            if "invalid_api_key" in error_text or "Incorrect API key provided" in error_text:
-                st.error(
-                    "OpenAI authentication failed. Update OPENAI_API_KEY in your .env "
-                    "with a real key from https://platform.openai.com/account/api-keys "
-                    "and restart Streamlit."
-                )
-            elif "status code: 404" in error_text and "model" in error_text and "not found" in error_text:
+            if "status code: 404" in error_text and "model" in error_text and "not found" in error_text:
                 ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
                 st.error(
                     "Ollama model not found locally. Run this in terminal: "
                     f"`ollama pull {ollama_model}` and restart Streamlit."
+                )
+            elif "connection refused" in error_text.lower() or "failed to establish a new connection" in error_text.lower():
+                st.error(
+                    "Could not connect to Ollama. Start Ollama locally and make sure "
+                    "`OLLAMA_BASE_URL` in your .env points to the right server."
                 )
             else:
                 st.error(f"Request failed: {error_text}")
