@@ -157,7 +157,7 @@ if uploaded_pdf:
             status_box.update(label="PDF indexed", state="complete", expanded=False)
 
 # ============================ Main Layout ========================
-st.title(" Agentic Vision ")
+st.title(" Agentic Chat ")
 
 # Chat area
 for message in st.session_state["message_history"]:
