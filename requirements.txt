@@ -6,8 +6,8 @@ python-dotenv==1.1.1
 langchain==0.3.27
 langchain-community==0.3.27
 langchain-groq==0.2.0
-langchain-openai==0.2.0
 langchain-text-splitters==0.3.9
+scikit-learn==1.8.0
 langgraph>=1.0,<2
 langgraph-prebuilt>=1.0,<2
 langgraph-checkpoint-sqlite==2.0.11
@@ -16,3 +16,4 @@ faiss-cpu
 pypdf
 duckduckgo-search
 requests==2.32.4
+pymysql==1.1.2

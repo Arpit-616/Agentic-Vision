@@ -5,7 +5,10 @@ A Streamlit-based chatbot that combines:
 - PDF question answering with retrieval-augmented generation
 - Web search
 - Stock price lookup
-- Basic calculator support
+ - Python 3.10+
+ - `pip`
+ - A Groq API key
+ - Optional MySQL database URL for persistence
 - Multiple chat threads in the sidebar with friendly labels and context previews
 
 The app uses LangGraph for tool routing, LangChain integrations for models and retrieval, and FAISS for vector search over uploaded PDFs.
@@ -13,13 +16,13 @@ The app uses LangGraph for tool routing, LangChain integrations for models and r
 ## Features
 
 - Upload a PDF and ask questions about its contents
-- Keep document context isolated per chat thread
 - Start new chats and revisit earlier threads from the sidebar
 - Use a built-in calculator tool for simple arithmetic
 - Search the web with DuckDuckGo
 - Fetch stock quotes with Alpha Vantage
-- Run with Groq
-
+ ```powershell
+ pip install -r requirements.txt
+ ```
 ## How It Works
 
 The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
@@ -27,16 +30,17 @@ The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
 - `frontend.py`
   - Builds the Streamlit interface
   - Tracks active and previous chat threads in `st.session_state`
+ DATABASE_URL=mysql+pymysql://username:password@host:3306/database_name
   - Streams assistant responses in the chat UI
   - Lets users upload PDFs for the current thread
 
 - `backend.py`
-  - Loads the configured LLM and embedding model
+ - Set `DATABASE_URL` if you want chat history and PDF metadata stored in MySQL
   - Splits uploaded PDFs into chunks
   - Stores embeddings in a FAISS vector store
   - Exposes tools for search, stock prices, math, and PDF retrieval
-  - Runs a LangGraph workflow that decides when to call tools
-
+ - Chat thread history and PDF metadata can be stored in MySQL when `DATABASE_URL` is set.
+ - PDF retrievers are still stored in memory while the app is running.
 ## Project Structure
 
 ```text
@@ -50,10 +54,7 @@ The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
 
 ## Requirements
 
-- Python 3.10+
-- `pip`
-- A Groq API key
-- An OpenAI API key for embeddings
+- Optional MySQL database URL for persistence
 
 ## Installation
 
@@ -61,12 +62,13 @@ The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
 
 ```powershell
 python -m venv venv
+DATABASE_URL=mysql+pymysql://username:password@host:3306/database_name
 .\venv\Scripts\activate
 ```
 
 2. Install dependencies:
-
-```powershell
+- Chat thread history and PDF metadata can also be stored in MySQL when `DATABASE_URL` is set.
+- PDF retrievers are still stored in memory while the app is running.
 pip install -r requirements.txt
 ```
 
@@ -76,7 +78,6 @@ Create or update `.env` in the project root.
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## Running the App
@@ -143,7 +144,6 @@ The app includes a stock lookup tool backed by Alpha Vantage.
 If the app says an API key is missing:
 
 - Set `GROQ_API_KEY` for the chat model
-- Set `OPENAI_API_KEY` for embeddings
 
 ### No document indexed
 
@@ -160,7 +160,7 @@ If the assistant says no document is available:
 - FAISS
 - Groq
 - PyPDF
-- OpenAI Embeddings
+- Scikit-learn (local hashing embeddings)
 - Requests
 
 ## Future Improvements

@@ -6,6 +6,9 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from backend import (
     chatbot,
     ingest_pdf,
+    load_thread_ids,
+    load_thread_messages,
+    save_thread_message,
     thread_document_metadata,
 )
 
@@ -34,6 +37,10 @@ def register_thread(thread_id: str) -> str:
 
 def activate_thread(thread_id: str) -> str:
     thread_key = register_thread(thread_id)
+    if not st.session_state["thread_messages"].get(thread_key):
+        stored_messages = load_thread_messages(thread_key)
+        if stored_messages:
+            st.session_state["thread_messages"][thread_key] = stored_messages
     st.session_state["thread_id"] = thread_key
     st.session_state["message_history"] = list(
         st.session_state["thread_messages"][thread_key]
@@ -48,6 +55,7 @@ def append_message(role: str, content: str):
     thread_key = str(st.session_state["thread_id"])
     register_thread(thread_key)
     st.session_state["thread_messages"][thread_key].append(message)
+    save_thread_message(thread_key, role, content)
 
 
 def get_thread_label(thread_id: str) -> str:
@@ -89,7 +97,7 @@ if "thread_messages" not in st.session_state:
     st.session_state["thread_messages"] = {}
 
 if "thread_order" not in st.session_state:
-    st.session_state["thread_order"] = []
+    st.session_state["thread_order"] = load_thread_ids()
 
 if "thread_id" not in st.session_state:
     st.session_state["thread_id"] = generate_thread_id()
