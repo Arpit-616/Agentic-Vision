@@ -213,6 +213,11 @@ if user_input:
                     "Could not connect to Ollama. Start Ollama locally and make sure "
                     "`OLLAMA_BASE_URL` in your .env points to the right server."
                 )
+            elif "cannot assign requested address" in error_text.lower() or "errno 99" in error_text.lower():
+                st.error(
+                    "Invalid Ollama host address. Set `OLLAMA_BASE_URL` to a reachable "
+                    "value such as `http://localhost:11434`, then restart Streamlit."
+                )
             else:
                 st.error(f"Request failed: {error_text}")
 

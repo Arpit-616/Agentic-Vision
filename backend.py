@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from typing import Annotated, Any, Dict, Optional, TypedDict
+from urllib.parse import urlparse, urlunparse
 
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -20,6 +21,31 @@ import requests
 load_dotenv(override=True)
 
 
+def _normalize_ollama_base_url(raw_url: str) -> str:
+    """Normalize common invalid local bind addresses to a client-connect URL."""
+    cleaned = (raw_url or "").strip().strip('"').strip("'")
+    if not cleaned:
+        return "http://localhost:11434"
+
+    try:
+        parsed = urlparse(cleaned)
+    except Exception:
+        return "http://localhost:11434"
+
+    if not parsed.scheme or not parsed.netloc:
+        return "http://localhost:11434"
+
+    if parsed.hostname in {"0.0.0.0", "::", "[::]"}:
+        host = "localhost"
+        if parsed.port:
+            netloc = f"{host}:{parsed.port}"
+        else:
+            netloc = host
+        parsed = parsed._replace(netloc=netloc)
+
+    return urlunparse(parsed).rstrip("/")
+
+
 def _get_ollama_installed_models(base_url: str) -> list[str]:
     """Fetch model names available in local Ollama; return empty list if unavailable."""
     tags_url = f"{base_url.rstrip('/')}/api/tags"
@@ -35,8 +61,8 @@ def _get_ollama_installed_models(base_url: str) -> list[str]:
 # -------------------
 # 1. LLM + embeddings
 # -------------------
-ollama_base_url = (
-    os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip().strip('"').strip("'")
+ollama_base_url = _normalize_ollama_base_url(
+    os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 )
 ollama_model = (
     os.getenv("OLLAMA_MODEL", "llama3.1:8b").strip().strip('"').strip("'")
@@ -127,7 +153,20 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
 # -------------------
 # 3. Tools
 # -------------------
-search_tool = DuckDuckGoSearchRun(region="us-en")
+_search_runner = DuckDuckGoSearchRun(region="us-en")
+
+
+@tool
+def search_web(query: str) -> dict:
+    """Search the web using DuckDuckGo, with network-safe error handling."""
+    try:
+        return {"query": query, "result": _search_runner.invoke(query)}
+    except Exception as exc:
+        return {
+            "query": query,
+            "error": "Web search is unavailable right now.",
+            "details": str(exc),
+        }
 
 
 @tool
@@ -170,8 +209,16 @@ def get_stock_price(symbol: str) -> dict:
         "https://www.alphavantage.co/query"
         f"?function=GLOBAL_QUOTE&symbol={symbol}&apikey=C9PE94QUEW9VWGFM"
     )
-    r = requests.get(url)
-    return r.json()
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except Exception as exc:
+        return {
+            "symbol": symbol,
+            "error": "Stock lookup failed.",
+            "details": str(exc),
+        }
 
 
 @tool
@@ -199,7 +246,7 @@ def rag_tool(query: str, thread_id: Optional[str] = None) -> dict:
     }
 
 
-tools = [search_tool, get_stock_price, calculator, rag_tool]
+tools = [search_web, get_stock_price, calculator, rag_tool]
 llm_with_tools = llm.bind_tools(tools)
 
 # -------------------

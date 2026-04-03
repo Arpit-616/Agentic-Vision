@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: langgraph-pdf-chatbot
+    runtime: python
+    pythonVersion: 3.11
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run frontend.py --logger.level=error --client.showErrorDetails=false
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: PORT
+        value: 10000

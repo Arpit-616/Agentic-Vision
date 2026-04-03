@@ -1,6 +1,7 @@
 # Keep only top-level app dependencies here so pip can resolve
 # Python-version-compatible transitive packages on its own.
 streamlit==1.47.1
+gunicorn==23.0.0
 python-dotenv==1.1.1
 langchain==0.3.27
 langchain-community==0.3.27
