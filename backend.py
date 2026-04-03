@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 import tempfile
 from typing import Annotated, Any, Dict, Optional, TypedDict
-from urllib.parse import urlparse, urlunparse
 
+import requests
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
@@ -12,82 +12,32 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_groq import ChatGroq
+from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
-import requests
 
 load_dotenv(override=True)
 
 
-def _normalize_ollama_base_url(raw_url: str) -> str:
-    """Normalize common invalid local bind addresses to a client-connect URL."""
-    cleaned = (raw_url or "").strip().strip('"').strip("'")
-    if not cleaned:
-        return "http://localhost:11434"
-
-    try:
-        parsed = urlparse(cleaned)
-    except Exception:
-        return "http://localhost:11434"
-
-    if not parsed.scheme or not parsed.netloc:
-        return "http://localhost:11434"
-
-    if parsed.hostname in {"0.0.0.0", "::", "[::]"}:
-        host = "localhost"
-        if parsed.port:
-            netloc = f"{host}:{parsed.port}"
-        else:
-            netloc = host
-        parsed = parsed._replace(netloc=netloc)
-
-    return urlunparse(parsed).rstrip("/")
-
-
-def _get_ollama_installed_models(base_url: str) -> list[str]:
-    """Fetch model names available in local Ollama; return empty list if unavailable."""
-    tags_url = f"{base_url.rstrip('/')}/api/tags"
-    try:
-        response = requests.get(tags_url, timeout=5)
-        response.raise_for_status()
-        payload = response.json() or {}
-        models = payload.get("models", [])
-        return [m.get("name", "").strip() for m in models if m.get("name")]
-    except Exception:
-        return []
 
 # -------------------
 # 1. LLM + embeddings
 # -------------------
-ollama_base_url = _normalize_ollama_base_url(
-    os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-)
-ollama_model = (
-    os.getenv("OLLAMA_MODEL", "llama3.1:8b").strip().strip('"').strip("'")
-)
-ollama_embed_model = (
-    os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-    .strip()
-    .strip('"')
-    .strip("'")
-)
-installed_models = _get_ollama_installed_models(ollama_base_url)
+groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    raise ValueError("GROQ_API_KEY environment variable is not set. Please add it to your .env file.")
 
-if installed_models:
-    if ollama_model not in installed_models:
-        ollama_model = installed_models[0]
-    if ollama_embed_model not in installed_models:
-        # Fall back to the active chat model to avoid immediate 404 errors.
-        ollama_embed_model = ollama_model
-
-llm = ChatOllama(
-    model=ollama_model,
-    base_url=ollama_base_url,
+llm = ChatGroq(
+    model="llama-3.1-8b-instant",
     temperature=0.2,
+    groq_api_key=groq_api_key,
 )
-embeddings = OllamaEmbeddings(model=ollama_embed_model, base_url=ollama_base_url)
+
+# Use OpenAI embeddings for document embeddings
+# Make sure OPENAI_API_KEY is set in your .env file
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 # -------------------
 # 2. PDF retriever store (per thread)
@@ -170,6 +120,12 @@ def search_web(query: str) -> dict:
 
 
 @tool
+def brave_search(query: str) -> dict:
+    """Compatibility alias for web search tool calls that still use the old name."""
+    return search_web(query)
+
+
+@tool
 def calculator(first_num: float, second_num: float, operation: str) -> dict:
     """
     Perform a basic arithmetic operation on two numbers.
@@ -246,7 +202,7 @@ def rag_tool(query: str, thread_id: Optional[str] = None) -> dict:
     }
 
 
-tools = [search_web, get_stock_price, calculator, rag_tool]
+tools = [search_web, brave_search, get_stock_price, calculator, rag_tool]
 llm_with_tools = llm.bind_tools(tools)
 
 # -------------------
@@ -267,16 +223,19 @@ def chat_node(state: ChatState, config=None):
 
     system_message = SystemMessage(
         content=(
-            "You are a helpful assistant. For questions about the uploaded PDF, call "
-            "the `rag_tool` and include the thread_id "
-            f"`{thread_id}`. You can also use the web search, stock price, and "
-            "calculator tools when helpful. If no document is available, ask the user "
-            "to upload a PDF."
+            "You are a helpful assistant. Answer directly unless you truly need a tool. "
+            "Use `rag_tool` for questions about the uploaded PDF and include the thread_id "
+            f"`{thread_id}`. Use the web search, stock price, and calculator tools only when "
+            "they are clearly necessary. If document is available, use that document to answer questions instead of web search. If no document is indexed, inform the user that they can upload"
+            "a PDF."
         )
     )
 
     messages = [system_message, *state["messages"]]
-    response = llm_with_tools.invoke(messages, config=config)
+    try:
+        response = llm_with_tools.invoke(messages, config=config)
+    except Exception:
+        response = llm.invoke(messages, config=config)
     return {"messages": [response]}
 
 

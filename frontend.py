@@ -203,20 +203,18 @@ if user_input:
             stream_failed = True
             error_text = str(exc)
             if "status code: 404" in error_text and "model" in error_text and "not found" in error_text:
-                ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+                groq_model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
                 st.error(
-                    "Ollama model not found locally. Run this in terminal: "
-                    f"`ollama pull {ollama_model}` and restart Streamlit."
+                    "Groq model not found or unavailable. Check the `GROQ_MODEL` value "
+                    f"(currently `{groq_model}`) and restart Streamlit."
                 )
             elif "connection refused" in error_text.lower() or "failed to establish a new connection" in error_text.lower():
                 st.error(
-                    "Could not connect to Ollama. Start Ollama locally and make sure "
-                    "`OLLAMA_BASE_URL` in your .env points to the right server."
+                    "Could not connect to the Groq API. Check your `GROQ_API_KEY` and network access."
                 )
             elif "cannot assign requested address" in error_text.lower() or "errno 99" in error_text.lower():
                 st.error(
-                    "Invalid Ollama host address. Set `OLLAMA_BASE_URL` to a reachable "
-                    "value such as `http://localhost:11434`, then restart Streamlit."
+                    "Invalid API endpoint or network address. Verify your environment variables and restart Streamlit."
                 )
             else:
                 st.error(f"Request failed: {error_text}")

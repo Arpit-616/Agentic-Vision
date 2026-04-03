@@ -1,4 +1,4 @@
-# Agentic Vision :-  A Multi Utility Chatbot
+# Agentic Vision :- A Multi Utility Chatbot
 
 A Streamlit-based chatbot that combines:
 
@@ -18,7 +18,7 @@ The app uses LangGraph for tool routing, LangChain integrations for models and r
 - Use a built-in calculator tool for simple arithmetic
 - Search the web with DuckDuckGo
 - Fetch stock quotes with Alpha Vantage
-- Run with Ollama
+- Run with Groq
 
 ## How It Works
 
@@ -52,7 +52,8 @@ The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
 
 - Python 3.10+
 - `pip`
-- Ollama installed locally if using Ollama
+- A Groq API key
+- An OpenAI API key for embeddings
 
 ## Installation
 
@@ -74,9 +75,8 @@ pip install -r requirements.txt
 Create or update `.env` in the project root.
 
 ```env
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.1:8b
-OLLAMA_EMBED_MODEL=nomic-embed-text
+GROQ_API_KEY=your_groq_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## Running the App
@@ -138,16 +138,12 @@ The app includes a stock lookup tool backed by Alpha Vantage.
 
 ## Troubleshooting
 
-### Ollama model not found
+### Missing API keys
 
-If the configured Ollama model is missing, pull it locally:
+If the app says an API key is missing:
 
-```powershell
-ollama pull llama3.1:8b
-ollama pull nomic-embed-text
-```
-
-Then restart the app.
+- Set `GROQ_API_KEY` for the chat model
+- Set `OPENAI_API_KEY` for embeddings
 
 ### No document indexed
 
@@ -162,9 +158,9 @@ If the assistant says no document is available:
 - LangChain
 - LangGraph
 - FAISS
-- Ollama
+- Groq
 - PyPDF
-- DuckDuckGo Search
+- OpenAI Embeddings
 - Requests
 
 ## Future Improvements
