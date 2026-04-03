@@ -1,4 +1,4 @@
-# Agentic Vision :- A Multi Utility Chatbot
+# Agentic Chat :- A Multi Utility Chatbot
 
 A Streamlit-based chatbot that combines:
 
