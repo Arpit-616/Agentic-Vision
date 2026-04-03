@@ -1,171 +1,274 @@
-# Agentic Chat :- A Multi Utility Chatbot
 
-A Streamlit-based chatbot that combines:
+# 🤖 Agentic Chat
 
-- PDF question answering with retrieval-augmented generation
-- Web search
-- Stock price lookup
- - Python 3.10+
- - `pip`
- - A Groq API key
- - Optional MySQL database URL for persistence
-- Multiple chat threads in the sidebar with friendly labels and context previews
+### A Multi-Utility AI Chatbot (RAG + Tools + Multi-Threading)
 
-The app uses LangGraph for tool routing, LangChain integrations for models and retrieval, and FAISS for vector search over uploaded PDFs.
+Agentic Chat is a **Streamlit-based intelligent chatbot** that combines document understanding, real-time web search, stock lookup, and utility tools into a single seamless interface.
 
-## Features
+It leverages **LangGraph for agent orchestration**, **LangChain for integrations**, and **FAISS for fast document retrieval**, enabling a powerful Retrieval-Augmented Generation (RAG) system.
 
-- Upload a PDF and ask questions about its contents
-- Start new chats and revisit earlier threads from the sidebar
-- Use a built-in calculator tool for simple arithmetic
-- Search the web with DuckDuckGo
-- Fetch stock quotes with Alpha Vantage
- ```powershell
- pip install -r requirements.txt
- ```
-## How It Works
+---
 
-The UI lives in `frontend.py` and the backend logic lives in `backend.py`.
+## 🚀 Live Demo
 
-- `frontend.py`
-  - Builds the Streamlit interface
-  - Tracks active and previous chat threads in `st.session_state`
- DATABASE_URL=mysql+pymysql://username:password@host:3306/database_name
-  - Streams assistant responses in the chat UI
-  - Lets users upload PDFs for the current thread
+👉 https://agentic-vision-v30k.onrender.com
 
-- `backend.py`
- - Set `DATABASE_URL` if you want chat history and PDF metadata stored in MySQL
-  - Splits uploaded PDFs into chunks
-  - Stores embeddings in a FAISS vector store
-  - Exposes tools for search, stock prices, math, and PDF retrieval
- - Chat thread history and PDF metadata can be stored in MySQL when `DATABASE_URL` is set.
- - PDF retrievers are still stored in memory while the app is running.
-## Project Structure
 
-```text
+---
+
+## ✨ Features
+
+* 📄 **PDF Question Answering (RAG)**
+
+  * Upload PDFs and ask contextual questions
+  * Uses embeddings + FAISS vector search
+
+* 🌐 **Web Search**
+
+  * Fetch real-time information via DuckDuckGo
+
+* 📈 **Stock Price Lookup**
+
+  * Get stock data using Alpha Vantage API
+
+* 🧮 **Built-in Calculator**
+
+  * Supports basic arithmetic (add, sub, mul, div)
+
+* 💬 **Multi-Chat Threads**
+
+  * Sidebar-based chat history
+  * Friendly labels + context previews
+
+* ⚡ **Streaming Responses**
+
+  * Real-time response generation in UI
+
+---
+
+## 🧠 How It Works
+
+### 🔹 Frontend (`frontend.py`)
+
+* Built with Streamlit
+* Manages chat UI and session state
+* Handles PDF uploads
+* Displays chat threads
+
+### 🔹 Backend (`backend.py`)
+
+* Handles tool routing via LangGraph
+* Splits PDFs into chunks
+* Generates embeddings and stores in FAISS
+* Integrates tools:
+
+  * Web search
+  * Calculator
+  * Stock API
+  * PDF retrieval
+
+---
+
+## 🗂️ Project Structure
+
+```bash
 .
-|-- backend.py
-|-- frontend.py
-|-- requirements.txt
-|-- .env
-|-- chatbot.db
+├── backend.py        # Core logic and tools
+├── frontend.py       # Streamlit UI
+├── requirements.txt  # Dependencies
+├── .env              # Environment variables
+├── chatbot.db        # Optional local DB
 ```
 
-## Requirements
+---
 
-- Optional MySQL database URL for persistence
+## ⚙️ Installation
 
-## Installation
+### 1. Clone the Repository
 
-1. Create and activate a virtual environment:
+```bash
+git clone https://github.com/your-username/agentic-chat.git
+cd agentic-chat
+```
 
-```powershell
+### 2. Create Virtual Environment
+
+```bash
 python -m venv venv
-DATABASE_URL=mysql+pymysql://username:password@host:3306/database_name
-.\venv\Scripts\activate
 ```
 
-2. Install dependencies:
-- Chat thread history and PDF metadata can also be stored in MySQL when `DATABASE_URL` is set.
-- PDF retrievers are still stored in memory while the app is running.
+Activate it:
+
+**Windows**
+
+```bash
+venv\Scripts\activate
+```
+
+**Mac/Linux**
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+### 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Environment Variables
+---
 
-Create or update `.env` in the project root.
+## 🔐 Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
+DATABASE_URL=mysql+pymysql://username:password@host:3306/database_name
 ```
 
-## Running the App
+> 💡 `DATABASE_URL` is optional (used for persistence)
 
-Start Streamlit with:
+---
 
-```powershell
+## ▶️ Run the App
+
+```bash
 streamlit run frontend.py
 ```
 
-Then open the local Streamlit URL shown in the terminal, usually:
+Open in browser:
 
 ```text
 http://localhost:8501
 ```
 
-## Using the App
+---
 
-1. Launch the app.
-2. Upload a PDF in the sidebar if you want document-based answers.
-3. Ask questions in the chat input.
-4. Use `New Chat` to start a separate thread.
-5. Open earlier threads from the sidebar.
+## 🧰 Supported Tools
 
-## Supported Tools
+### 📄 PDF Retrieval
 
-### PDF Retrieval
+* Upload a document
+* Automatically chunked and embedded
+* Used for context-aware answering
 
-- Upload a PDF for the active thread
-- The file is chunked and embedded
-- The assistant uses retrieval to answer questions about that document
+### 🌐 Web Search
 
-Note: the latest PDF uploaded in a thread becomes the active retrieval source for that thread.
+* DuckDuckGo integration
+* Used when fresh data is needed
 
-### Calculator
+### 📈 Stock Prices
 
-The assistant can handle basic operations:
+* Powered by Alpha Vantage API
+* Real-time stock lookup
 
-- `add`
-- `sub`
-- `mul`
-- `div`
+### 🧮 Calculator
 
-### Web Search
+Supports:
 
-DuckDuckGo search is available when the assistant decides it needs fresh web information.
+* `add`
+* `sub`
+* `mul`
+* `div`
 
-### Stock Prices
+---
 
-The app includes a stock lookup tool backed by Alpha Vantage.
+## 🗄️ Persistence (Optional)
 
-## Notes and Limitations
+* Chat history → MySQL (via `DATABASE_URL`)
+* PDF embeddings → In-memory (FAISS)
 
-- Chat thread history in the sidebar is currently stored in Streamlit session state.
-- PDF retrievers are stored in memory while the app is running.
-- If the app restarts, in-memory thread state and PDF indexes are cleared.
-- The stock tool may be rate-limited depending on Alpha Vantage usage.
-- The current UI hides raw thread UUIDs and shows friendly thread labels instead.
+> ⚠️ Data resets when app restarts unless DB is configured
 
-## Troubleshooting
+---
 
-### Missing API keys
+## ⚠️ Limitations
 
-If the app says an API key is missing:
+* In-memory PDF storage (not persistent yet)
+* API rate limits (Alpha Vantage)
+* No authentication system
+* Session-based chat history (unless DB used)
 
-- Set `GROQ_API_KEY` for the chat model
+---
 
-### No document indexed
+## 🛠️ Tech Stack
 
-If the assistant says no document is available:
+* **Frontend:** Streamlit
+* **Backend:** Python
+* **LLM:** Groq
+* **Frameworks:** LangChain, LangGraph
+* **Vector DB:** FAISS
+* **PDF Processing:** PyPDF
+* **Embeddings:** Scikit-learn (local hashing)
+* **APIs:** DuckDuckGo, Alpha Vantage
 
-- Upload a PDF in the current thread
-- Ask the question again after indexing finishes
+---
 
-## Tech Stack
+## 🚀 Future Improvements
 
-- Streamlit
-- LangChain
-- LangGraph
-- FAISS
-- Groq
-- PyPDF
-- Scikit-learn (local hashing embeddings)
-- Requests
+* ✅ Persistent vector database (FAISS → cloud DB)
+* ✅ User authentication
+* ✅ Chat history across sessions
+* ✅ Better error handling
+* ✅ API key management via environment
+* ✅ UI enhancements
 
-## Future Improvements
+---
 
-- Persist chat threads across app restarts
-- Persist vector indexes per thread
-- Replace the hardcoded stock API key with environment-based configuration
-- Add tests and better error handling
+## 🐛 Troubleshooting
+
+### Missing API Key
+
+Make sure `.env` contains:
+
+```env
+GROQ_API_KEY=your_key
+```
+
+---
+
+### No Document Found
+
+* Upload a PDF first
+* Wait for indexing
+* Then ask your question
+
+---
+
+### MySQL Issues
+
+* Ensure correct `DATABASE_URL`
+* Use cloud DB instead of localhost for deployment
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repo
+2. Create a new branch
+3. Make changes
+4. Submit a pull request
+
+---
+
+## 📜 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## ⭐ Support
+
+If you found this useful, consider giving it a ⭐ on GitHub!
+
+---
+
+
+* Create a **cool project banner**
+* Or optimize it for a **hackathon submission page** 🚀
